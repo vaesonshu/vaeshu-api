@@ -20,6 +20,10 @@ class LoginController {
       console.log(e)
     }
   }
+
+  async reg(ctx) {
+    
+  }
 }
 
 export default new LoginController()
