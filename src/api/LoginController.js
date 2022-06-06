@@ -1,4 +1,4 @@
-import send from '../config/MailConfig'
+import send from '../config/MailConfig.js'
 import moment from 'moment'
 class LoginController {
   constructor() {}
