@@ -1,4 +1,5 @@
 import Koa from 'koa'
+import JWT from 'koa-jwt'
 import Router from'koa-router'
 import helmet from 'koa-helmet'
 import statics from 'koa-static'
@@ -7,6 +8,8 @@ import koaBody from 'koa-body'
 import jsonutil from 'koa-json'
 import compose from 'koa-compose'
 import compress from 'koa-compress'
+import config from './config/index'
+import errorhandle from './common/ErrorHandle'
 const app = new Koa()
 const cors = require('@koa/cors') // koa2处理跨域问题
 
@@ -30,13 +33,16 @@ const cors = require('@koa/cors') // koa2处理跨域问题
 // })
 
 const isDevMode = process.env.NODE_ENV === 'production' ? false : true
-
+// 定义公共路径，不需要jwt鉴权
+const jwt = JWT({secret: config.JWT_SECRET}).unless({ path: [/^\/public/, /\/login/] })
 // 使用koa-compose 集成中间件
 const middleware = compose([
   koaBody(),
   cors(),
   jsonutil({ pretty: false, param: 'pretty'}),
-  helmet()
+  helmet(),
+  errorhandle,
+  jwt
 ])
 
 if(!isDevMode) {
