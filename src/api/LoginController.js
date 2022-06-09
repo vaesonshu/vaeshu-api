@@ -1,4 +1,5 @@
 import send from '../config/MailConfig.js'
+import bcrypt from 'bcrypt'
 import moment from 'moment'
 import jsonwebtoken from 'jsonwebtoken'
 import config from '../config/index'
@@ -26,7 +27,47 @@ class LoginController {
   }
 
   async reg(ctx) {
-    
+    // 接受客户端的数据
+    const { body } = ctx.request
+    console.log('body', body)
+    // 验证图片验证码的时效性、正确性
+    let sid = body.sid
+    let code = body.code
+    let msg = {}
+    console.log('code', code._value)
+    let result = await checkCode(sid, code._value)
+    let check = true
+    if(result) {
+      // mongodb查库
+      let user1 = await User.findOne({username: body.username._value})
+      console.log('user1', user1)
+      if(user1 != null && typeof user1.username !== 'undefined') {
+        msg.username = ['此邮箱已经注册，可以通过邮箱找回密码']
+        check = false
+      }
+      // let user2 = await User.findOne({name: body.name._value})
+      // if(user2 != null && typeof user2.name !== 'undefined') {
+      //   msg.username = ['此昵称已经被注册，请修改']
+      //   check = false
+      // }
+      // 写入数据到数据库
+      if(check) {
+        body.password._value = await bcrypt.hash(body.password._value, 5)
+        let user = new User({
+          username: body.username._value,
+          name: body.name._value,
+          password: body.password._value,
+          created: moment().format('YYYY-MM-DD HH:mm:ss')
+        })
+        let result = await user.save()
+        ctx.body = {
+          code: 200,
+          data: result,
+          msg: '注册成功'
+        }
+        return
+      }
+    }
   }
 
   async login (ctx) {
@@ -37,13 +78,16 @@ class LoginController {
     const { body } = ctx.request
     let sid = body.sid
     let code = body.code
-    let result = await checkCode(sid, code)
+    console.log('code', code._value)
+    let result = await checkCode(sid, code._value)
+    console.log('result', result)
     if(result) {
       // 验证用户账号密码是否正确
       let checkUserPassword = false
       // mongodb查库
-      let user = await User.findOne({username: body.username})
-      if(user.password === body.password) {
+      let user = await User.findOne({username: body.username._value})
+      console.log('user', user)
+      if(user.password === body.password._value) {
         checkUserPassword = true
       }
       if(checkUserPassword) {

@@ -1,8 +1,9 @@
 import { getValue } from '../config/RedisConfig'
 const checkCode = async (key, value) => {
   const redisData = await getValue(key)
+  console.log('redis', redisData, value)
   if (redisData != null) {
-    if (redisData.toLowerCase() === value.toLowerCase()) {
+    if (redisData === value) {
       return true
     } else {
       return false
